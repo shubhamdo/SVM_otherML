@@ -1,0 +1,128 @@
+```{r name, include=TRUE}
+```
+
+---
+title: "Homework 2"
+author: "Shubham Shinde"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem 1
+- Choose a Problem from Analytic 2 or from an internet
+repositories.
+
+- Compute a SVM and a model from Analytic 1 or 2. Compare
+both analysis. Compare the confusion matrices.
+Differences?
+- Present your results.
+
+## Telecom Churn Problem 
+
+Nowadays, telecom industry faces fierce com-petition in satisfying its customers. The role of churn prediction system is not only restricted to accurately predict churners but also to interpret customer churn behavior.
+
+Cell2Cell dataset is preprocessed and a balanced version provided for analyzing Process. consists of 71,047 instances and 58 attributes.
+Guys you can try with data set. find measures like accuracy, ROC, AUC.
+Please find the link for the dataset [here](https://www.kaggle.com/jpacse/datasets-for-churn-telecom?select=cell2celltrain.csv)
+
+### Libraries Import
+```{r libimp, include=FALSE}
+library(dplyr)
+library(tidyverse)
+library(e1071) # SVM Package
+```
+
+### Data Import 
+```{r dataimpp, include=TRUE}
+cell_churn <- read.csv("C:/Users/shubh/OneDrive - SRH IT/University/Semester 3/Analytics 3/Codes/cell2cellholdout.csv/cell2celltrain_sample.csv",stringsAsFactors = TRUE)
+```
+
+### Structure of the Data
+```{r datastr, include=TRUE}
+str(cell_churn)
+```
+
+## Data Cleaning
+```{r datacln, include=TRUE}
+# ServiceArea_uniq <- unique(cell_churn$ServiceArea)
+cell_churn <- na.omit(cell_churn)
+cell_churn$ServiceArea <- gsub(" ","UNKNOWN",cell_churn$ServiceArea, fixed = TRUE)
+```
+
+## Descriptive Stats
+```{r dataprep, include=TRUE}
+summary(cell_churn)
+```
+
+## Information for processing data if categorical variables has more that 10 levels
+Non-numerical data such as categorical data are common in practice. Some classification methods are adaptive to categorical predictor variables in nature, but some methods can be only applied to continuous numerical data. Among the three classification methods, only Kernel Density Classification can handle the categorical variables in theory, while kNN and SVM are unable to be applied directly since they are based on the Euclidean distances. In order to define the distance metrics for categorical variables, the first step of preprocessing of the dataset is to use dummy variables to represent the categorical variables.
+
+Secondly, due to the distinct natures of categorical and numerical data, we usually need to standardize the numerical variables, such as the contributions to the euclidean distances from a numerical variable and a categorical variable are basically on the same level.
+
+Finally, the introduction of dummy variables usually increase the dimension significantly. By various experiments, we find that dimension reduction techniques such as PCA usually improve the performance of these three classifiers significantly.
+# https://stats.libretexts.org/Bookshelves/Computing_and_Modeling/RTG%3A_Classification_Methods/4%3A_Numerical_Experiments_and_Real_Data_Analysis/Preprocessing_of_categorical_predictors_in_SVM%2C_KNN_and_KDC_(contributed_by_Xi_Cheng)
+
+
+## SVM
+```{r model, include=TRUE}
+m <- svm(Churn~CustomerID+MonthlyRevenue+MonthlyMinutes+TotalRecurringCharge+DirectorAssistedCalls+OverageMinutes+
+           RoamingCalls+PercChangeMinutes+PercChangeRevenues+DroppedCalls+BlockedCalls+UnansweredCalls+
+           CustomerCareCalls+ThreewayCalls+ReceivedCalls+OutboundCalls+InboundCalls+PeakCallsInOut+
+           OffPeakCallsInOut+DroppedBlockedCalls+CallForwardingCalls+CallWaitingCalls+MonthsInService+
+           UniqueSubs+ActiveSubs+Handsets +HandsetModels +CurrentEquipmentDays +AgeHH1 +AgeHH2 +ChildrenInHH 
+         +HandsetRefurbished +HandsetWebCapable +TruckOwner +RVOwner +Homeownership +BuysViaMailOrder 
+         +RespondsToMailOffers +OptOutMailings +NonUSTravel +OwnsComputer +HasCreditCard +RetentionCalls 
+         +RetentionOffersAccepted +NewCellphoneUser +NotNewCellphoneUser +ReferralsMadeBySubscriber 
+         +IncomeGroup +OwnsMotorcycle +AdjustmentsToCreditRating +HandsetPrice +MadeCallToRetentionTeam 
+         +CreditRating +PrizmCode +Occupation +MaritalStatus, data = cell_churn)
+```
+
+
+Summary of the SVM Model
+```{r modelsummary}
+summary(m)
+```
+
+
+Creation of Test Data for model prediction
+```{r createtest_data}
+test_data <- cell_churn[1:50,]
+new_data = test_data[1,]
+```
+
+Data Cleaning for the newdata i.e prediction
+```{r dataclfornewdata}
+new_data$HandsetPrice <- as.numeric(new_data$HandsetPrice)
+new_data <- na.omit(new_data)
+```
+
+Predict Data
+```{r predictsvm}
+predict(m, newdata = new_data)
+```
+
+Confusion Matrix of SVM Model
+```{r confsvm}
+svm_cm <- confusionMatrix(predict(m, type = "class" ), reference = cell_churn$Churn)
+svm_cm
+```
+
+## Decision Tree
+```{r dctree}
+dc_tree <- rpart(Churn~CustomerID+MonthlyRevenue+MonthlyMinutes+TotalRecurringCharge+DirectorAssistedCalls+OverageMinutes+
+        RoamingCalls+PercChangeMinutes+PercChangeRevenues+DroppedCalls+BlockedCalls+UnansweredCalls+
+        CustomerCareCalls+ThreewayCalls+ReceivedCalls+OutboundCalls+InboundCalls+PeakCallsInOut+
+        OffPeakCallsInOut+DroppedBlockedCalls+CallForwardingCalls+CallWaitingCalls+MonthsInService+
+        UniqueSubs+ActiveSubs+Handsets +HandsetModels +CurrentEquipmentDays +AgeHH1 +AgeHH2 +ChildrenInHH 
+      +HandsetRefurbished +HandsetWebCapable +TruckOwner +RVOwner +Homeownership +BuysViaMailOrder 
+      +RespondsToMailOffers +OptOutMailings +NonUSTravel +OwnsComputer +HasCreditCard +RetentionCalls 
+      +RetentionOffersAccepted +NewCellphoneUser +NotNewCellphoneUser +ReferralsMadeBySubscriber 
+      +IncomeGroup +OwnsMotorcycle +AdjustmentsToCreditRating +HandsetPrice +MadeCallToRetentionTeam 
+      +CreditRating +PrizmCode +Occupation +MaritalStatus, data = cell_churn)
+
+rpart.plot(dc_tree)
+```
